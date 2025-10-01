@@ -19,6 +19,7 @@ import {
 import { useEditorStore } from "./store/editorStore";
 import { EditorTool } from "@/lib/types";
 import { CategoryDialog } from "./CategoryDialog";
+import { ShortcutsHelp } from "./ShortcutsHelp";
 
 const TOOLS: Array<{ 
   id: EditorTool; 
@@ -62,9 +63,10 @@ export const Toolbar = ({ className }: ToolbarProps) => {
     }
   };
 
-  const handleDuplicateSelected = () => {
-    // TODO: Implémenter la duplication
-    console.log("Dupliquer les éléments sélectionnés");
+  const handleCopySelected = () => {
+    if (selection.length > 0) {
+      navigator.clipboard.writeText(JSON.stringify(selectedElements));
+    }
   };
 
   const handleZoomIn = () => {
@@ -178,8 +180,8 @@ export const Toolbar = ({ className }: ToolbarProps) => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleDuplicateSelected}
-              title="Dupliquer (Ctrl+D)"
+              onClick={handleCopySelected}
+              title="Copier (Ctrl+C)"
             >
               <Copy size={16} />
             </Button>
@@ -207,7 +209,7 @@ export const Toolbar = ({ className }: ToolbarProps) => {
         {activeTool === "pan" && "Glissez pour naviguer dans le plan"}
       </div>
 
-      {/* Statistiques */}
+      {/* Statistiques et aide */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <span>
           Éléments: <Badge variant="outline">{selectedElements.length}</Badge>
@@ -217,6 +219,10 @@ export const Toolbar = ({ className }: ToolbarProps) => {
             {selectedElements.filter(el => el.type === "seat").length}
           </Badge>
         </span>
+        
+        <Separator orientation="vertical" className="h-6" />
+        
+        <ShortcutsHelp />
       </div>
     </div>
   );

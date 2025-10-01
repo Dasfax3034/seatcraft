@@ -43,26 +43,26 @@ export class CanvasDrawer {
     // Appliquer la transformation si rotation
     if (seat.rotation) {
       ctx.save();
-      ctx.translate(seat.x + seat.w / 2, seat.y + seat.h / 2);
+      ctx.translate(seat.x + 20 / 2, seat.y + 20 / 2);
       ctx.rotate((seat.rotation * Math.PI) / 180);
-      ctx.translate(-(seat.w / 2), -(seat.h / 2));
+      ctx.translate(-(20 / 2), -(20 / 2));
     }
 
     // Dessiner le siège
     ctx.fillStyle = fillColor;
     ctx.strokeStyle = isSelected ? DEFAULT_COLORS.selection : DEFAULT_COLORS.stroke;
     ctx.lineWidth = isSelected ? 2 : 1;
-    
-    ctx.fillRect(0, 0, seat.w, seat.h);
-    ctx.strokeRect(0, 0, seat.w, seat.h);
+
+    ctx.fillRect(0, 0, 20, 20);
+    ctx.strokeRect(0, 0, 20, 20);
 
     // Dessiner le label si présent
     if (seat.label) {
       ctx.fillStyle = "#ffffff";
-      ctx.font = `${Math.min(seat.w, seat.h) * 0.4}px Arial`;
+      ctx.font = `${Math.min(20, 20) * 0.4}px Arial`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(seat.label, seat.w / 2, seat.h / 2);
+      ctx.fillText(seat.label, 20 / 2, 20 / 2);
     }
 
     if (seat.rotation) {
@@ -163,14 +163,14 @@ export class CanvasDrawer {
 
     if (row.curvature) {
       // Dessiner un arc de cercle
-      const { radius, startAngle, endAngle } = row.curvature;
+      const curvature = row.curvature;
       ctx.beginPath();
       ctx.arc(
         row.origin.x, 
         row.origin.y, 
-        radius, 
-        startAngle * Math.PI / 180, 
-        endAngle * Math.PI / 180
+        curvature, 
+        curvature * Math.PI / 180, 
+        curvature * Math.PI / 180
       );
       ctx.stroke();
     } else {

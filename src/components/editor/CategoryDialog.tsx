@@ -10,6 +10,7 @@ import { Plus, Palette, Trash2 } from "lucide-react";
 import { useEditorStore } from "./store/editorStore";
 import { SeatCategory } from "@/lib/types";
 import { generateId } from "./utils/helpers";
+import { ColorInput } from "../ui/color-input";
 
 export const CategoryDialog = () => {
   const {
@@ -63,28 +64,34 @@ export const CategoryDialog = () => {
             Catégories de sièges
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Liste des catégories existantes */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Catégories actuelles</Label>
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {Object.values(plan.categories).map(category => (
-                <div key={category.id} className="flex items-center gap-2 p-2 bg-muted/50 rounded border">
-                  <div 
+              {Object.values(plan.categories).map((category) => (
+                <div
+                  key={category.id}
+                  className="flex items-center gap-2 p-2 bg-muted/50 rounded border"
+                >
+                  <div
                     className="w-4 h-4 rounded flex-shrink-0"
                     style={{ backgroundColor: category.color }}
                   />
                   <Input
                     value={category.label}
-                    onChange={(e) => handleCategoryUpdate(category.id, "label", e.target.value)}
+                    onChange={(e) =>
+                      handleCategoryUpdate(category.id, "label", e.target.value)
+                    }
                     className="h-8 flex-1"
                   />
-                  <Input
-                    type="color"
+                  <ColorInput
                     value={category.color}
-                    onChange={(e) => handleCategoryUpdate(category.id, "color", e.target.value)}
-                    className="w-10 h-8 p-1 flex-shrink-0"
+                    onChange={(value) =>
+                      handleCategoryUpdate(category.id, "color", value)
+                    }
+                    className="w-10 flex-shrink-0"
                   />
                   {Object.keys(plan.categories).length > 1 && (
                     <Button
@@ -118,13 +125,12 @@ export const CategoryDialog = () => {
                   }
                 }}
               />
-              <Input
-                type="color"
+              <ColorInput
                 value={newCategoryColor}
-                onChange={(e) => setNewCategoryColor(e.target.value)}
-                className="w-12 p-1"
+                onChange={setNewCategoryColor}
+                className="w-12"
               />
-              <Button 
+              <Button
                 onClick={handleAddCategory}
                 disabled={!newCategoryName.trim()}
                 className="px-3"
@@ -138,7 +144,9 @@ export const CategoryDialog = () => {
           <div className="mt-4 p-3 bg-muted/30 rounded text-sm text-muted-foreground">
             <div className="flex justify-between">
               <span>Total des catégories :</span>
-              <span className="font-medium">{Object.keys(plan.categories).length}</span>
+              <span className="font-medium">
+                {Object.keys(plan.categories).length}
+              </span>
             </div>
           </div>
         </div>

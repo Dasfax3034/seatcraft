@@ -10,14 +10,33 @@ const generateSeatsForRow = (row: RowElement): SeatElement[] => {
     let x = row.origin.x;
     let y = row.origin.y;
 
-    if (row.curvature) {
-      // Placer les sièges sur un arc de cercle
-      const { radius, startAngle, endAngle } = row.curvature;
-      const angleRange = endAngle - startAngle;
-      const seatAngle = startAngle + (angleRange * i) / (row.seatCount - 1);
+    if (row.curvature && row.curvature !== 0) {
+      // Placer les sièges sur un arc de cercle avec le nouveau système
+      const curve = row.curvature;
+      const totalLength = (row.seatCount - 1) * row.spacing;
       
-      x = row.origin.x + Math.cos(seatAngle * Math.PI / 180) * radius;
-      y = row.origin.y + Math.sin(seatAngle * Math.PI / 180) * radius;
+      // Calculer le rayon basé sur la courbe et la longueur totale
+      const curveRadians = (curve * Math.PI) / 180;
+      const radius = Math.abs(totalLength / (2 * Math.sin(Math.abs(curveRadians) / 2)));
+      
+      // Point central de l'arc
+      const angle = row.orientation * (Math.PI / 180);
+      const midX = row.origin.x + (totalLength / 2) * Math.cos(angle);
+      const midY = row.origin.y + (totalLength / 2) * Math.sin(angle);
+      
+      // Centre du cercle (décalé perpendiculairement)
+      const perpAngle = angle + Math.PI / 2;
+      const centerOffset = curve > 0 ? -radius : radius;
+      const centerX = midX + centerOffset * Math.cos(perpAngle);
+      const centerY = midY + centerOffset * Math.sin(perpAngle);
+      
+      // Angle de départ de l'arc
+      const startAngle = Math.atan2(row.origin.y - centerY, row.origin.x - centerX);
+      const angleStep = Math.abs(curveRadians) / Math.max(1, row.seatCount - 1);
+      
+      const currentAngle = startAngle + (curve > 0 ? i * angleStep : -i * angleStep);
+      x = centerX + radius * Math.cos(currentAngle);
+      y = centerY + radius * Math.sin(currentAngle);
     } else {
       // Placer les sièges en ligne droite
       const orientationRad = (row.orientation * Math.PI) / 180;
@@ -33,8 +52,6 @@ const generateSeatsForRow = (row: RowElement): SeatElement[] => {
       number: seatNumber,
       x: x - seatWidth / 2,
       y: y - seatHeight / 2,
-      w: seatWidth,
-      h: seatHeight,
       category: row.category,
       status: i === 2 || i === 7 ? "unavailable" : "available", // Quelques sièges indisponibles pour l'exemple
       label: `${row.label}${seatNumber}`,
@@ -63,7 +80,7 @@ export const samplePlan: SeatPlan = {
       color: "#3b82f6"
     },
     "balcon": {
-      id: "balcon", 
+      id: "balcon",
       label: "Balcon",
       color: "#f59e0b"
     },
@@ -84,21 +101,19 @@ export const samplePlan: SeatPlan = {
       spacing: 35,
       seatCount: 10,
       category: "orchestre",
-      w: 30,
-      h: 30
+
     },
     // Ligne B - Balcon
     {
       type: "row",
-      id: "row-b", 
+      id: "row-b",
       label: "B",
       origin: { x: 80, y: 150 },
       orientation: 0,
       spacing: 35,
       seatCount: 12,
       category: "balcon",
-      w: 30,
-      h: 30
+
     },
     // Ligne VIP courbée
     {
@@ -110,13 +125,7 @@ export const samplePlan: SeatPlan = {
       spacing: 40,
       seatCount: 6,
       category: "loge",
-      curvature: {
-        radius: 150,
-        startAngle: -30,
-        endAngle: 30
-      },
-      w: 35,
-      h: 35
+      curvature: 15
     },
     // Zone de scène
     {
@@ -148,7 +157,7 @@ export const samplePlan: SeatPlan = {
 // Fonction pour générer un plan complet avec sièges
 const generateCompletePlan = (basePlan: SeatPlan): SeatPlan => {
   const allElements = [...basePlan.elements];
-  
+
   // Pour chaque ligne, générer ses sièges
   basePlan.elements
     .filter(el => el.type === "row")
@@ -156,7 +165,7 @@ const generateCompletePlan = (basePlan: SeatPlan): SeatPlan => {
       const seats = generateSeatsForRow(row as RowElement);
       allElements.push(...seats);
     });
-  
+
   return {
     ...basePlan,
     elements: allElements
@@ -178,7 +187,7 @@ export const emptyPlan: SeatPlan = {
   categories: {
     "standard": {
       id: "standard",
-      label: "Standard", 
+      label: "Standard",
       color: "#3b82f6"
     },
     "premium": {

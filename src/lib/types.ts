@@ -9,8 +9,8 @@ export type SeatElement = {
   number?: number; // Index dans la ligne
   x: number;
   y: number;
-  w: number;
-  h: number;
+  w?: number;
+  h?: number;
   category: string;
   status: SeatStatus;
   label?: string;
@@ -27,11 +27,7 @@ export type RowElement = {
   spacing: number; // Distance entre les sièges
   seatCount: number; // Nombre de sièges dans la ligne
   category: string; // Catégorie par défaut des sièges
-  curvature?: {
-    radius: number;
-    startAngle: number;
-    endAngle: number;
-  };
+  curvature?: number;
   w?: number; // Largeur des sièges (par défaut 30)
   h?: number; // Hauteur des sièges (par défaut 30)
 };
@@ -80,9 +76,9 @@ export type SeatPlan = {
   elements: CanvasElement[];
 };
 
-export type EditorTool = 
+export type EditorTool =
   | "select"
-  | "add-row" 
+  | "add-row"
   | "add-zone"
   | "add-text"
   | "pan";

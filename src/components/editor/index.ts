@@ -1,6 +1,5 @@
 // Export de tous les composants de l'éditeur
 export { PlanEditor } from "./PlanEditor";
-export { CanvasRenderer } from "./CanvasRenderer";
 export { Toolbar } from "./Toolbar";
 export { Inspector } from "./Inspector";
 export { CategoryDialog } from "./CategoryDialog";

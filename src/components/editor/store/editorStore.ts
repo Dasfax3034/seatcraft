@@ -14,29 +14,37 @@ const generateId = (): string => {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 };
 
+// Taille fixe pour tous les sièges
+const SEAT_SIZE = 20;
+
 // Fonction helper pour générer les sièges d'une ligne
 const generateSeatsForRowHelper = (row: RowElement): SeatElement[] => {
   const seats: SeatElement[] = [];
-  const seatWidth = row.w || 20;
-  const seatHeight = row.h || 20;
 
   for (let i = 0; i < row.seatCount; i++) {
     let x = row.origin.x;
     let y = row.origin.y;
+    let rotation = 0;
 
     if (row.curvature) {
-      // Placer les sièges sur un arc de cercle
-      const { radius, startAngle, endAngle } = row.curvature;
-      const angleRange = endAngle - startAngle;
-      const seatAngle = startAngle + (angleRange * i) / (row.seatCount - 1);
+      // Ligne courbe
+      const curvature = row.curvature;
+
+      // Convertir en radians
+      const angleRad = (curvature * Math.PI) / 180;
       
-      x = row.origin.x + Math.cos(seatAngle * Math.PI / 180) * radius;
-      y = row.origin.y + Math.sin(seatAngle * Math.PI / 180) * radius;
+      x = row.origin.x + curvature * Math.cos(angleRad);
+      y = row.origin.y + curvature * Math.sin(angleRad);
+      rotation = curvature + 90;
     } else {
-      // Placer les sièges en ligne droite
-      const orientationRad = (row.orientation * Math.PI) / 180;
-      x = row.origin.x + Math.cos(orientationRad) * (i * row.spacing);
-      y = row.origin.y + Math.sin(orientationRad) * (i * row.spacing);
+      // Ligne droite
+      const angle = row.orientation * (Math.PI / 180);
+      const deltaX = Math.cos(angle) * row.spacing;
+      const deltaY = Math.sin(angle) * row.spacing;
+      
+      x += i * deltaX;
+      y += i * deltaY;
+      rotation = row.orientation;
     }
 
     const seatNumber = i + 1;
@@ -45,13 +53,14 @@ const generateSeatsForRowHelper = (row: RowElement): SeatElement[] => {
       id: `${row.id}-seat-${seatNumber}`,
       rowId: row.id,
       number: seatNumber,
-      x: x - seatWidth / 2,
-      y: y - seatHeight / 2,
-      w: seatWidth,
-      h: seatHeight,
+      x: x - SEAT_SIZE / 2,
+      y: y - SEAT_SIZE / 2,
+      w: SEAT_SIZE,
+      h: SEAT_SIZE,
       category: row.category,
       status: "available",
       label: `${row.label}${seatNumber}`,
+      rotation: rotation,
       isOverride: false
     };
 
@@ -104,6 +113,8 @@ interface EditorStore extends EditorState {
   addToSelection: (id: string) => void;
   toggleSelection: (id: string) => void;
   clearSelection: () => void;
+  selectElement: (id: string, multi?: boolean) => void;
+  selectSeatDirectly: (seatId: string, multi?: boolean) => void;
   
   // Outils
   setTool: (tool: EditorTool) => void;
@@ -281,6 +292,47 @@ export const useEditorStore = create<EditorStore>((set, get) => {
     clearSelection: () => set(() => ({
       selection: []
     })),
+
+    // Sélection intelligente avec support multi-select
+    selectElement: (id: string, multi: boolean = false) => {
+      const { plan } = get();
+      const element = plan.elements.find(el => el.id === id);
+      
+      if (!element) return;
+      
+      if (multi) {
+        // Mode multi-select : toggle l'élément
+        set((state) => ({
+          selection: state.selection.includes(id)
+            ? state.selection.filter(selectedId => selectedId !== id)
+            : [...state.selection, id]
+        }));
+      } else {
+        // Mode sélection simple
+        if (element.type === "seat" && element.rowId) {
+          // Clic simple sur un siège : sélectionner la rangée parente
+          set(() => ({ selection: [element.rowId!] }));
+        } else {
+          // Autres éléments : sélection normale
+          set(() => ({ selection: [id] }));
+        }
+      }
+    },
+
+    // Sélection directe d'un siège (double-clic)
+    selectSeatDirectly: (seatId: string, multi: boolean = false) => {
+      if (multi) {
+        // Mode multi-select : toggle le siège
+        set((state) => ({
+          selection: state.selection.includes(seatId)
+            ? state.selection.filter(selectedId => selectedId !== seatId)
+            : [...state.selection, seatId]
+        }));
+      } else {
+        // Sélection directe du siège uniquement
+        set(() => ({ selection: [seatId] }));
+      }
+    },
 
     // Actions des outils
     setTool: (tool: EditorTool) => set(() => ({
